@@ -5,6 +5,13 @@ const handleCastErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleDuplicateDB = (err) => {
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  console.log(value);
+  const message = `Duplicvate field ${value}. Please use another name`;
+  return new AppError(message, 404);
+};
+
 const sendErrorDev = (err, res) => {
   //Operational trusted error,:send message to client
   if (err.isOperational) {
@@ -44,6 +51,8 @@ module.exports = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateDB(error);
+
     sendErrorProd(error, res);
   }
 
